@@ -17,7 +17,7 @@
 
     - name: install CNI plugins
       unarchive:
-        src: https://github.com/containernetworking/plugins/releases/download/v{{ cni_version }}/cni-plugins-amd64-v{{ cni_version }}.tgz
+        src: https://github.com/containernetworking/plugins/releases/download/{{ cni_release }}/cni-plugins-amd64-{{ cni_release }}.tgz
         dest: /opt/cni/bin
         creates: /opt/cni/bin/loopback
         remote_src: yes
@@ -27,7 +27,7 @@
 
     - name: install k8s binaries
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/{{ item }}
+        url: https://storage.googleapis.com/kubernetes-release/release/{{ k8s_release }}/bin/linux/amd64/{{ item }}
         dest: /opt/bin
         mode: 0555
       with_items:
@@ -37,7 +37,7 @@
 
     - name: create kubelet config
       get_url:
-        url: https://raw.githubusercontent.com/kubernetes/kubernetes/v{{ k8s_version }}/build/debs/kubelet.service
+        url: https://raw.githubusercontent.com/kubernetes/kubernetes/{{ k8s_release }}/build/debs/kubelet.service
         dest: /etc/systemd/system/kubelet.service
       notify: change kubelet config path
 
@@ -46,12 +46,12 @@
 
     - name: create kubeadm config
       get_url:
-        url: https://raw.githubusercontent.com/kubernetes/kubernetes/v{{ k8s_version }}/build/debs/10-kubeadm.conf
+        url: https://raw.githubusercontent.com/kubernetes/kubernetes/{{ k8s_release }}/build/debs/10-kubeadm.conf
         dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
       notify: change kubeadm config path
 
     - name: enable kubelet service
-      systemd: name=kubelet state=started enabled=yes
+      systemd: name=kubelet daemon_reload=yes state=started enabled=yes
 
   handlers: 
 
@@ -66,3 +66,58 @@
         path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
         regexp: /usr/bin
         replace: /opt/bin
+
+
+- name: configure master
+  hosts: master
+  tasks:
+
+    - name: init cluster
+      shell: /opt/bin/kubeadm init --pod-network-cidr={{ pod_cidr }}
+      args:
+        creates: /etc/kubernetes/admin.conf
+      become: yes
+
+    - name: create .kube dir
+      file: path=~/.kube state=directory
+
+    - name: copy admin.conf for user
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: ~{{ ansible_ssh_user }}/.kube/config
+        remote_src: yes
+        owner: "{{ ansible_ssh_user }}"
+      become: yes
+
+    - name: install Pod network
+      shell: /opt/bin/kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/{{ flannel_release }}/Documentation/kube-flannel.yml >> .pod_network_done
+      args:
+        chdir: ~{{ ansible_ssh_user }}
+        creates: .pod_network_done
+
+    - name: untaint for single node cluster
+      shell: /opt/bin/kubectl taint nodes --all node-role.kubernetes.io/master-
+      args:
+        chdir: ~{{ ansible_ssh_user }}
+        creates: .single_node_taint
+      when: single_node
+
+    - name: get join command
+      shell: /opt/bin/kubeadm token create --print-join-command
+      register: join_command_raw
+      become: yes
+
+    - name: set join command
+      set_fact:
+        join_command: "{{ join_command_raw.stdout_lines[0] }}"
+
+
+- name: configure knodes
+  hosts: knodes
+  tasks:
+
+    - name: join cluster
+      shell: "{{ hostvars['master'].join_command }} >> .joined_cluster"
+      args:
+        chdir: $HOME
+        creates: .joined_cluster
