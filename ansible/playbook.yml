@@ -34,3 +34,35 @@
         - kubeadm
         - kubelet
         - kubectl
+
+    - name: create kubelet config
+      get_url:
+        url: https://raw.githubusercontent.com/kubernetes/kubernetes/v{{ k8s_version }}/build/debs/kubelet.service
+        dest: /etc/systemd/system/kubelet.service
+      notify: change kubelet config path
+
+    - name: create dir for kubeadm conf
+      file: path=/etc/systemd/system/kubelet.service.d state=directory recurse=yes
+
+    - name: create kubeadm config
+      get_url:
+        url: https://raw.githubusercontent.com/kubernetes/kubernetes/v{{ k8s_version }}/build/debs/10-kubeadm.conf
+        dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+      notify: change kubeadm config path
+
+    - name: enable kubelet service
+      systemd: name=kubelet state=started enabled=yes
+
+  handlers: 
+
+    - name: change kubelet config path
+      replace:
+        path: /etc/systemd/system/kubelet.service
+        regexp: /usr/bin
+        replace: /opt/bin
+
+    - name: change kubeadm config path
+      replace:
+        path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+        regexp: /usr/bin
+        replace: /opt/bin
