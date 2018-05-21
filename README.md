@@ -9,5 +9,13 @@ Ansible and Terraform installed.
 cd terraform
 terraform plan
 terraform apply
+cd ..
 ```
+
 ### Configure nodes with Ansible
+```
+cd ansible
+vim hosts
+ansible-galaxy install vmware.coreos-bootstrap
+ansible-playbook playbook.yml
+```

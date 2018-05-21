@@ -1,0 +1,13 @@
+---
+- hosts: all
+  gather_facts: False
+  roles:
+    - vmware.coreos-bootstrap
+
+- name: install k8s
+  hosts: all
+  tasks:
+
+    - name: enable docker service
+      systemd: name=docker state=started enabled=yes
+      become: yes
