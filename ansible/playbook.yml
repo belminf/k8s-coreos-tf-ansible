@@ -6,8 +6,18 @@
 
 - name: install k8s
   hosts: all
+  become: yes
   tasks:
 
     - name: enable docker service
       systemd: name=docker state=started enabled=yes
-      become: yes
+
+    - name: create dir for CNI plugins
+      file: path=/opt/cni/bin state=directory recurse=yes
+
+    - name: install CNI plugins
+      unarchive:
+        src: https://github.com/containernetworking/plugins/releases/download/{{ cni_version }}/cni-plugins-amd64-{{ cni_version }}.tgz
+        dest: /opt/cni/bin
+        remote_src: yes
+
