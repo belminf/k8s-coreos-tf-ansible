@@ -17,7 +17,20 @@
 
     - name: install CNI plugins
       unarchive:
-        src: https://github.com/containernetworking/plugins/releases/download/{{ cni_version }}/cni-plugins-amd64-{{ cni_version }}.tgz
+        src: https://github.com/containernetworking/plugins/releases/download/v{{ cni_version }}/cni-plugins-amd64-v{{ cni_version }}.tgz
         dest: /opt/cni/bin
+        creates: /opt/cni/bin/loopback
         remote_src: yes
 
+    - name: create dir for k8s binaries
+      file: path=/opt/bin state=directory recurse=yes
+
+    - name: install k8s binaries
+      get_url:
+        url: https://storage.googleapis.com/kubernetes-release/release/v{{ k8s_version }}/bin/linux/amd64/{{ item }}
+        dest: /opt/bin
+        mode: 0555
+      with_items:
+        - kubeadm
+        - kubelet
+        - kubectl
