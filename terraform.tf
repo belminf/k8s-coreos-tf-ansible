@@ -20,9 +20,19 @@ provider "digitalocean" {
 
 resource "digitalocean_droplet" "master" {
   count = "1"
-  name = "k8-coreos"
+  name = "k8-master"
   private_networking = true
-  image = "coreos-stable"
+  image = "${var.image_name}"
+  size = "${var.size}"
+  region = "${var.region}"
+  ssh_keys = ["${var.ssh_key_id}"]
+}
+
+resource "digitalocean_droplet" "knodes" {
+  count = "2"
+  name = "k8-node-${count.index}"
+  private_networking = true
+  image = "${var.image_name}"
   size = "${var.size}"
   region = "${var.region}"
   ssh_keys = ["${var.ssh_key_id}"]
