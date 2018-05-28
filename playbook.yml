@@ -35,7 +35,7 @@
         url: https://storage.googleapis.com/kubernetes-release/release/{{ k8s_release }}/bin/linux/amd64/{{ item }}
         dest: /opt/bin
         mode: 0555
-      with_items:
+      loop:
         - kubeadm
         - kubelet
         - kubectl
