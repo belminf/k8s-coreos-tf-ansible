@@ -134,7 +134,8 @@
   tasks:
 
     - name: join cluster
-      shell: "{{ hostvars['master'].join_command }} >> .joined_cluster"
+      shell: "/opt/bin/{{ hostvars[groups['master'][0]].join_command }} && date >> .joined_cluster"
       args:
-        chdir: $HOME
+        chdir: ~{{ ansible_ssh_user }}
         creates: .joined_cluster
+      become: yes
