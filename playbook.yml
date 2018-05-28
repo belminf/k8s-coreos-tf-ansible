@@ -53,7 +53,12 @@
       get_url:
         url: https://raw.githubusercontent.com/kubernetes/kubernetes/{{ k8s_release }}/build/debs/10-kubeadm.conf
         dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-      notify: change kubeadm config path
+      notify:
+        - change kubeadm config path
+        - remove default net args from kubeadm conf
+
+    - name: commit changes to configs
+      meta: flush_handlers
 
     - name: enable kubelet service
       systemd: name=kubelet daemon_reload=yes state=started enabled=yes
@@ -71,6 +76,13 @@
         path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
         regexp: /usr/bin
         replace: /opt/bin
+
+    - name: remove default net args from kubeadm conf
+      lineinfile:
+        path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+        regexp: '^Environment="KUBELET_NETWORK_ARGS=.+"$'
+        line: 'Environment="KUBELET_NETWORK_ARGS="'
+        state: absent
 
 
 - name: configure master
