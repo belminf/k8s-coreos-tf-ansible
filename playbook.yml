@@ -9,6 +9,11 @@
   become: yes
   tasks:
 
+    - name: generate hosts file
+      lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item].ansible_hostname  }}"
+      when: hostvars[item]['ansible_default_ipv4'] is defined
+      loop: "{{ query('inventory_hostnames', 'all') }}"
+
     - name: enable docker service
       systemd: name=docker state=started enabled=yes
 
