@@ -14,6 +14,10 @@ variable "size" {
     type = "string"
 }
 
+variable "image_name" {
+    type = "string"
+}
+
 provider "digitalocean" {
     token = "${var.do_token}"
 }
