@@ -45,3 +45,7 @@ resource "digitalocean_droplet" "knodes" {
 output "ssh-master" {
     value = "ssh core@${digitalocean_droplet.master.ipv4_address}"
 }
+
+output "nodes" {
+    value = "${join(",", digitalocean_droplet.knodes.*.ipv4_address)}"
+}
