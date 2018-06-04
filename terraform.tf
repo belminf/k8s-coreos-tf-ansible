@@ -1,7 +1,3 @@
-variable "ssh_key_id" {
-    type = "string"
-}
-
 variable "do_token" {
     type = "string"
 }
@@ -18,28 +14,37 @@ variable "image_name" {
     type = "string"
 }
 
+variable "knode_count" {
+    type = "string"
+}
+
+variable "ssh_keys" {
+    type = "list"
+}
+
 provider "digitalocean" {
     token = "${var.do_token}"
 }
 
+
 resource "digitalocean_droplet" "master" {
   count = "1"
-  name = "k8-master"
+  name = "k8s-master"
   private_networking = true
   image = "${var.image_name}"
   size = "${var.size}"
   region = "${var.region}"
-  ssh_keys = ["${var.ssh_key_id}"]
+  ssh_keys = "${var.ssh_keys}"
 }
 
 resource "digitalocean_droplet" "knodes" {
-  count = "2"
-  name = "k8-node-${count.index}"
+  count = "${var.knode_count}"
+  name = "k8s-node-${count.index}"
   private_networking = true
   image = "${var.image_name}"
   size = "${var.size}"
   region = "${var.region}"
-  ssh_keys = ["${var.ssh_key_id}"]
+  ssh_keys = "${var.ssh_keys}"
 }
 
 output "ssh-master" {
