@@ -90,7 +90,7 @@
   tasks:
 
     - name: init cluster
-      shell: /opt/bin/kubeadm init --pod-network-cidr={{ pod_cidr }}
+      shell: /opt/bin/kubeadm init --pod-network-cidr={{ pod_cidr }} --apiserver-advertise-address={{ ansible_env.COREOS_PUBLIC_IPV4 }}
       args:
         creates: /etc/kubernetes/admin.conf
       become: yes

@@ -49,9 +49,11 @@ provider "google" {
 }
 
 resource "google_compute_instance" "master" {
-    name         = "k8s-master"
-    machine_type = "${var.type}"
-    zone         = "${var.zone}"
+    name            = "k8s-master"
+    tags            = ["kubernetes"]
+
+    machine_type    = "${var.type}"
+    zone            = "${var.zone}"
     can_ip_forward  = true
 
     metadata {
@@ -73,11 +75,14 @@ resource "google_compute_instance" "master" {
 }
 
 resource "google_compute_instance" "knodes" {
-    name         = "k8s-node${format("%02d", count.index + 1)}"
-    count        = "${var.knode_count}"
-    machine_type = "${var.type}"
-    zone         = "${var.zone}"
+    name            = "k8s-node${format("%02d", count.index + 1)}"
+    count           = "${var.knode_count}"
+    tags            = ["kubernetes"]
+
+    machine_type    = "${var.type}"
+    zone            = "${var.zone}"
     can_ip_forward  = true
+
 
     metadata {
         sshKeys = "${var.ssh_user}:${file(var.ssh_pub_file)}"
@@ -95,6 +100,18 @@ resource "google_compute_instance" "knodes" {
             // Ephemeral IP
         }
     }
+}
+
+resource "google_compute_firewall" "kubernetes" {
+    name        = "kubernetes-api"
+    network     = "default"
+    
+    allow {
+        protocol    = "tcp"
+        ports       = ["8443"]
+    }
+
+    target_tags = ["kubernetes"]
 }
 
 output "ssh-master" {
