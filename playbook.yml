@@ -129,6 +129,7 @@
       shell: "/opt/bin/kubeadm token create --print-join-command"
       register: join_command_raw
       become: yes
+      changed_when: no
 
     - name: set join command
       set_fact:
