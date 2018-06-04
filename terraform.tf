@@ -1,56 +1,65 @@
-variable "do_token" {
-    type = "string"
+variable "creds" {
+    type    = "string"
+    default = "creds.json"
+}
+
+variable "project" {
+    type    = "string"
 }
 
 variable "region" {
-    type = "string"
+    type    = "string"
 }
 
-variable "size" {
-    type = "string"
+variable "image" {
+    type    = "string"
 }
 
-variable "image_name" {
-    type = "string"
+variable "type" {
+    type    = "string"
 }
 
-variable "knode_count" {
-    type = "string"
+variable "zone" {
+    type    = "string"
 }
 
-variable "ssh_keys" {
-    type = "list"
+variable "ssh_pub_file" {
+    type    = "string"
 }
 
-provider "digitalocean" {
-    token = "${var.do_token}"
+variable "ssh_user" {
+    type    = "string"
 }
 
-
-resource "digitalocean_droplet" "master" {
-  count = "1"
-  name = "k8s-master"
-  private_networking = true
-  image = "${var.image_name}"
-  size = "${var.size}"
-  region = "${var.region}"
-  ssh_keys = "${var.ssh_keys}"
+provider "google" {
+    credentials = "${file(var.creds)}"
+    project     = "${var.project}"
+    region      = "${var.region}"
 }
 
-resource "digitalocean_droplet" "knodes" {
-  count = "${var.knode_count}"
-  name = "k8s-node-${count.index}"
-  private_networking = true
-  image = "${var.image_name}"
-  size = "${var.size}"
-  region = "${var.region}"
-  ssh_keys = "${var.ssh_keys}"
+resource "google_compute_instance" "master" {
+    name         = "k8s-master"
+    machine_type = "${var.type}"
+    zone         = "${var.zone}"
+
+    metadata {
+        sshKeys = "${var.ssh_user}:${file(var.ssh_pub_file)}"
+    }
+
+    boot_disk {
+        initialize_params {
+            image   = "${var.image}"
+        }
+    }
+
+    network_interface {
+        network = "default"
+        access_config {
+            // Ephemeral IP
+        }
+    }
 }
 
 output "ssh-master" {
-    value = "ssh core@${digitalocean_droplet.master.ipv4_address}"
-}
-
-output "nodes" {
-    value = "${join(",", digitalocean_droplet.knodes.*.ipv4_address)}"
+    value = "ssh ${var.ssh_user}@${google_compute_instance.master.network_interface.0.access_config.0.assigned_nat_ip}"
 }

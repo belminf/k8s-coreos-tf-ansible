@@ -4,8 +4,17 @@
 Ansible and Terraform installed.
 
 ## Cluster creation
-### Create droplets with Terraform
+### Create GCP instances
+
+Get your creds file:
+
+1. Create project on Google Cloud
+2. Enable Compute Engine API
+3. Create service account JSON with Compute Admin role ("Credentials" page)
+4. Save as `creds.json` (or whatever you setup as creds file in tfvars)
+
 ```
+terraform init
 terraform plan
 terraform apply
 ```
