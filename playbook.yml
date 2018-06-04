@@ -106,6 +106,12 @@
         owner: "{{ ansible_ssh_user }}"
       become: yes
 
+    - name: fetch cluster config
+      fetch:
+        src: ~{{ ansible_ssh_user }}/.kube/config
+        dest: admin.conf
+        flat: yes
+
     - name: install Pod network
       shell: "/opt/bin/kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/{{ flannel_release }}/Documentation/kube-flannel.yml && date >> .pod_network_done"
       args:

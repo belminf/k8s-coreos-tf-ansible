@@ -4,3 +4,4 @@ terraform.tfstate*
 hosts
 ansible-roles
 creds.json
+admin.conf
