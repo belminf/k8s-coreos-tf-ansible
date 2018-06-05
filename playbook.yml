@@ -87,10 +87,12 @@
 
 - name: configure master
   hosts: master
+  vars:
+    kubeadm_extra: ""
   tasks:
 
     - name: init cluster
-      shell: /opt/bin/kubeadm init --pod-network-cidr={{ pod_cidr }} --apiserver-advertise-address={{ ansible_env.COREOS_PUBLIC_IPV4 }}
+      shell: /opt/bin/kubeadm init {{ kubeadm_extra }} --pod-network-cidr={{ pod_cidr }} --apiserver-advertise-address={{ ansible_env.COREOS_PUBLIC_IPV4 }}
       args:
         creates: /etc/kubernetes/admin.conf
       become: yes
