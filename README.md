@@ -22,9 +22,16 @@ terraform apply
 ### Configure nodes with Ansible
 Get latest CNI (`https://github.com/containernetworking/plugins/releases/`), flannel (`https://github.com/coreos/flannel/releases`) and k8s (`curl -sSL https://dl.k8s.io/release/stable.txt`) versions.
 ```
+cp hosts.example hosts
 vim hosts
 ansible-galaxy install vmware.coreos-bootstrap
 ansible-playbook playbook.yml
+```
+
+## Use kubectl
+
+```
+KUBECONFIG=admin.conf kubectl get nodes
 ```
 
 ## Sources
