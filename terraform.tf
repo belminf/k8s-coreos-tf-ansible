@@ -108,7 +108,7 @@ resource "google_compute_firewall" "kubernetes" {
     
     allow {
         protocol    = "tcp"
-        ports       = ["8443"]
+        ports       = ["6443"]
     }
 
     target_tags = ["kubernetes"]
