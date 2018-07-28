@@ -6,7 +6,7 @@ variable "ssh_pub_file" {
     type    = "string"
 }
 
-variable "knode_count" {
+variable "node_count" {
     type    = "string"
     default = 2
 }
@@ -74,9 +74,9 @@ resource "google_compute_instance" "master" {
     }
 }
 
-resource "google_compute_instance" "knodes" {
+resource "google_compute_instance" "nodes" {
     name            = "k8s-node${format("%02d", count.index + 1)}"
-    count           = "${var.knode_count}"
+    count           = "${var.node_count}"
     tags            = ["kubernetes"]
 
     machine_type    = "${var.type}"
@@ -119,5 +119,5 @@ output "ssh-master" {
 }
 
 output "nodes" {
-    value = "${join(",", google_compute_instance.knodes.*.network_interface.0.access_config.0.assigned_nat_ip)}"
+    value = "${join(",", google_compute_instance.nodes.*.network_interface.0.access_config.0.assigned_nat_ip)}"
 }
